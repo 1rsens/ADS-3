@@ -2,118 +2,86 @@
 #include <string>
 #include "tstack.h"
 
-int priority(char priority) {
-    switch (priority) {
+int pr(char c) {
+    switch (c) {
       case '(':
           return 0;
-          break;
       case ')':
           return 1;
-          break;
       case '+':
-          return 2;
-          break;
       case '-':
           return 2;
-          break;
       case '*':
-          return 3;
-          break;
       case '/':
           return 3;
-          break;
-      default:
-          return -1;
-    }
-}
-
-int calculate(int first, int second, char operand) {
-    switch (operand) {
-      case '+':
-          return first + second;
-          break;
-      case '-':
-          return first - second;
-          break;
-      case '*':
-          return first * second;
-          break;
-      case '/':
-          return first / second;
-          break;
       default:
           return -1;
     }
 }
 
 std::string infx2pstfx(std::string inf) {
-    return std::string("");
-    Tstack <char> steck;
-    char top = 0, ch;
-    int p;
-    std::string po;
+    TStack<char> stack;
+    std::string res;
 
     for (int i = 0; i < inf.length(); i++) {
-        ch = inf[i];
-        p = priority(ch);
-        if (p > -1) {
-            if ((p == 0 || p > priority(top) || steck.isEmpty()) && ch != ')') {
-                if (steck.isEmpty())
-                    top = ch;
-                steck.push(ch);
-            }
-            else if (ch == ')') {
-                while (stack.get() != '(') {
-                    po.push_back(stack.get());
-                    po.push_back(' ');
-                    stack.pop();
-                }
+        if ((inf[i] >= '0') && (inf[i] <= '9')) {
+            res += inf[i];
+            res += ' ';
+        } else if (inf[i] == '(' || pr(inf[i]) > pr(stack.get()) || stack.isEmpty()) {
+            stack.push(inf[i]);
+        } else if (inf[i] == ')') {
+            while (!stack.isEmpty() && stack.get() != '(') {
+                res += stack.get();
+                res += ' ';
                 stack.pop();
-                if (stack.isEmpty())
-                    top = 0;
             }
-            else {
-                while (!stack.isEmpty() && priority(stack.get()) >= p) {
-                    po.push_back(stack.get());
-                    po.push_back(' ');
-                    stack.pop();
-                }
-                if (stack.isEmpty())
-                    top = inf[i];
-                stack.push(inf[i]);
+
+            if (stack.get() == '(') {
+               stack.pop();
             }
-        }
-        else {
-            po.push_back(ch);
-            po.push_back(' ');
+        } else {
+            while (!stack.isEmpty() && pr(stack.get()) >= pr(inf[i])) {
+                res = stack.get();
+                res += ' ';
+                stack.pop();
+            }
+
+            stack.push(inf[i]);
         }
     }
+
     while (!stack.isEmpty()) {
-        po.push_back(stack.get());
-        po.push_back(' ');
+        res += stack.get();
+        res += ' ';
         stack.pop();
     }
-    po.erase(po.end() - 1, po.end());
-    return po;
+
+    return res;
 }
 
 int eval(std::string pst) {
-    return 0;
-    TStack <int> stack;
-    int p, a1, a2, res;
-    for (int i = 0; i < pst.size(); i++)
-    {
-        p = priority(pst[i]);
+    TStack<int> stack;
 
-        if (p == -1) stack.push(pst[i] - 48);
-        else {
-            a1 = stack.get();
+    for (int i = 0; i < pst.length(); i++) {
+        if ((pst[i] >= '0') && (pst[i] <= '9')) {
+            stack.push(pst[i] - '0');
+        } else if (pst[i] != ' ') {
+            int a = stack.get();
             stack.pop();
-            a2 = stack.get();
+            int b = stack.get();
             stack.pop();
-            res = calculate(a1, a2, pst[i]);
-            stack.push(res);
+
+            if (pst[i] == '-') {
+                stack.push(b - a);
+            } else if (pst[i] == '+') {
+                stack.push(b + a);
+            } else if (pst[i] == '*') {
+                stack.push(b * a);
+            } else {
+                stack.push(b / a);
+            }
         }
     }
+
     return stack.get();
 }
